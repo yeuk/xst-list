@@ -1,0 +1,6 @@
+{
+    "require": {
+        "wilon/support": "dev-master",
+        "imangazaliev/didom": "^1.13"
+    }
+}
