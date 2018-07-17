@@ -29,31 +29,32 @@ $baseUri = 'http://www.xiaoshuotxt.org/';
 $logFile = path(__DIR__, 'error.log');
 $resFile = path(__DIR__, 'result.log');
 $fp = file($resFile);
-$classifyArr = [
-    'mingzhu',    // 文学名著
-    'dangdai',    // 现代小说
-    'waiwen',    // 世界名著
-    'ertong',    // 儿童文学
-    'gudian',    // 古典名著
-    'sanwen',    // 散文随笔
-    'qingchun',    // 青春校园
-    'pinglun',    // 文学评论
-    'xuanhuan',    // 玄幻仙侠
-    'yanqing',    // 言情小说
-    'wuxia',    // 武侠小说
-    'chuanyue',    // 穿越小说
-    'xuanyi',    // 侦探悬疑
-    'kehuan',    // 科幻小说
-    'wangyou',    // 网游小说
-    'renwen',    // 人文社科
-    'zhuanji',    // 人物传记
-    'lishi',    // 历史小说
-    'junshi',    // 军事小说
-    'lizhi',    // 励志书籍
-    'shenghuo',    // 生活科普
+$classifyAllArr = [
+    'mingzhu' => '文学名著',
+    'dangdai' => '现代小说',
+    'waiwen' => '世界名著',
+    'ertong' => '儿童文学',
+    'gudian' => '古典名著',
+    'sanwen' => '散文随笔',
+    'qingchun' => '青春校园',
+    'pinglun' => '文学评论',
+    'xuanhuan' => '玄幻仙侠',
+    'yanqing' => '言情小说',
+    'wuxia' => '武侠小说',
+    'chuanyue' => '穿越小说',
+    'xuanyi' => '侦探悬疑',
+    'kehuan' => '科幻小说',
+    'wangyou' => '网游小说',
+    'renwen' => '人文社科',
+    'zhuanji' => '人物传记',
+    'lishi' => '历史小说',
+    'junshi' => '军事小说',
+    'lizhi' => '励志书籍',
+    'shenghuo' => '生活科普',
 ];
+$classifyArr = array_keys($classifyAllArr);
 
-// 标记
+// result.log 最后一行做标记
 $lastCk = $lastI = $lastDk = -1;
 if (($c = count($fp)) > 1) {
     $mark = $fp[$c-1];
@@ -65,7 +66,11 @@ foreach ($classifyArr as $ck => $classify) {
     if ($ck < $lastCk) continue;
     $uri = path($baseUri, $classify);
     for ($i = 1; $i < 9999; $i++) {
-        if ($ck == $lastCk && $i < $lastI) continue;
+        echo "Collect: ", $classify, $i, br();
+        if ($ck == $lastCk && $i < $lastI) {
+            echo '    continue;', br();
+            continue;
+        }
         // url
         if ($i == 1) {
             $url = $uri;
@@ -81,23 +86,30 @@ foreach ($classifyArr as $ck => $classify) {
         }
         // 解析页面
         $divList = $indexDoc->find('#zuo .bbox');
+        echo "        continue  ";
         foreach($divList as $dk => $div) {
-            if ($ck == $lastCk && $i == $lastI && $dk <= $lastDk) continue;
+            if ($ck == $lastCk && $i == $lastI && $dk <= $lastDk) {
+                echo " $dk; ";
+                continue;
+            }
             // 解析dom
             $dom = $div->find('.bintro')[0];
             try {
                 $bookName = $dom->find('h3 a')[0]->text();
                 $bookUri = $dom->find('h3 a')[0]->attr('href');
                 $bookUrl = path($baseUri, $bookUri);
-                $author = $dom->find('.ex p')[1]->find('a')[0]->text();
+                $bookInfoP = $dom->find('.ex p');
+                $authorDom = $bookInfoP[count($bookInfoP) - 2];
+                $author = $authorDom->find('a')[0]->text();
             } catch (Exception $e) {
                 simpleLog($logFile, $e->getMessage());
-                break 2;
+                break;
             }
             // 存储
-            echo $newLine = "$classify $ck $i $dk $bookName $author $bookUrl" . PHP_EOL;
+            echo $newLine = $classifyAllArr[$classify] . ",$bookName,$author,$bookUrl" .  br();
             file_put_contents($resFile, $newLine, FILE_APPEND);
         }
+        echo br();
         // 避免采集频率太快
         sleep(2);
     }
